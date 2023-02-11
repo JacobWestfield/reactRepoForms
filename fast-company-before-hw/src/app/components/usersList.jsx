@@ -7,12 +7,15 @@ import GroupList from "./groupList";
 import SearchStatus from "./searchStatus";
 import UserTable from "./usersTable";
 import _ from "lodash";
+import SearchField from "./searchField";
+
 const UsersList = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [professions, setProfession] = useState();
     const [selectedProf, setSelectedProf] = useState();
     const [sortBy, setSortBy] = useState({ path: "name", order: "asc" });
-    const pageSize = 8;
+    const [searchData, setSearchData] = useState();
+    const pageSize = 4;
 
     const [users, setUsers] = useState();
     useEffect(() => {
@@ -39,7 +42,22 @@ const UsersList = () => {
         setCurrentPage(1);
     }, [selectedProf]);
 
+    /**
+     * Сбрасывает фильтр
+     * Принимает в качестве параметра объект события из DOM, производит форматирование данных из input
+     * Далее выставляет состояние по полученным данным
+     * @param {object} data
+     */
+    const handleSearch = (data) => {
+        const { value } = data.target;
+        setSelectedProf();
+        value.trim();
+        value.toLowerCase();
+        setSearchData(value);
+    };
+
     const handleProfessionSelect = (item) => {
+        setSearchData("");
         setSelectedProf(item);
     };
 
@@ -51,13 +69,29 @@ const UsersList = () => {
     };
 
     if (users) {
-        const filteredUsers = selectedProf
-            ? users.filter(
-                  (user) =>
-                      JSON.stringify(user.profession) ===
-                      JSON.stringify(selectedProf)
-              )
-            : users;
+        let filteredUsers = users;
+
+        if (selectedProf) {
+            filteredUsers = users.filter(
+                (user) =>
+                    JSON.stringify(user.profession) ===
+                    JSON.stringify(selectedProf)
+            );
+        }
+
+        if (searchData) {
+            filteredUsers = users.filter((user) => {
+                if (user.name.toLowerCase().includes(searchData)) return user;
+                return undefined;
+            });
+        }
+
+        // вот этот вариант не работает, хотя он логически абсолютно такой-же как чуть выше. Это как-то тупо, но может и я тупой
+        // if (searchData) {
+        //     filteredUsers = users.filter((user) => {
+        //         return user.name.toLowerCase().includes(searchData) ? user : undefined;
+        //     });
+        // }
 
         const count = filteredUsers.length;
         const sortedUsers = _.orderBy(
@@ -65,6 +99,7 @@ const UsersList = () => {
             [sortBy.path],
             [sortBy.order]
         );
+
         const usersCrop = paginate(sortedUsers, currentPage, pageSize);
         const clearFilter = () => {
             setSelectedProf();
@@ -90,6 +125,10 @@ const UsersList = () => {
                 )}
                 <div className="d-flex flex-column">
                     <SearchStatus length={count} />
+                    <SearchField
+                        searchData={searchData}
+                        onSearch={handleSearch}
+                    />
                     {count > 0 && (
                         <UserTable
                             users={usersCrop}
