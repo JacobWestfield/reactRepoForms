@@ -97,11 +97,20 @@ const EditUserPage = ({ userId }) => {
             console.log(user);
             history.push(`/users/${userId}`);
         });
-        // тут сделал временный object, без него почему-то не работало
+    };
+    const handleBackward = () => {
+        history.push(`/users/${userId}`);
     };
     if (qualities && professions) {
         return (
             <div className="container mt-5">
+                <button
+                    onClick={handleBackward}
+                    className="btn btn-primary d-flex align-items-center"
+                >
+                    <i className="bi bi-arrow-left"></i>
+                    Back
+                </button>
                 <div className="row">
                     <div className="col-md-6 offset-md-3 shadow p-4">
                         <form onSubmit={handleSubmit}>
